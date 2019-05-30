@@ -1,0 +1,153 @@
+//
+//  RegexManager.swift
+//  TapLabel
+//
+//  Created by season on 2019/5/30.
+//  Copyright © 2019 season. All rights reserved.
+//
+
+import Foundation
+
+public class RegexManager {
+    
+    /// 正则缓存池
+    public static var regularExpresionPool = [String: NSRegularExpression]()
+    
+    /// 空字符串
+    public static var spaceCharacterSet: CharacterSet = {
+        let characterSet = NSMutableCharacterSet(charactersIn: "\u{00a0}")
+        characterSet.formUnion(with: CharacterSet.whitespacesAndNewlines)
+        return characterSet as CharacterSet
+    }()
+    
+    /// 清除regularExpresionPool
+    public static func clearRegularExpresionPool() {
+        regularExpresionPool.removeAll()
+    }
+    
+    /// 创建NSRegularExpression
+    ///
+    /// - Parameter pattern: 正则字符串
+    /// - Returns: NSRegularExpression
+    /// - Throws: RegexError
+    public static func regexWithPattern(_ pattern: String) -> NSRegularExpression? {
+        if let regex = regularExpresionPool[pattern] {
+            return regex
+        } else {
+            do {
+                let regularExpression: NSRegularExpression
+                regularExpression =  try NSRegularExpression(pattern: pattern, options:NSRegularExpression.Options.caseInsensitive)
+                regularExpresionPool[pattern] = regularExpression
+                return regularExpression
+            } catch {
+                return nil
+            }
+        }
+    }
+    
+    /// 通过检查类型获取正则对象
+    ///
+    /// - Parameter regularType: 检查类型
+    /// - Returns: 正则对象NSRegularExpression
+    public static func regexWithRegularType(_ regularType: RegularType) -> NSRegularExpression? {
+        let pattern = regularType.pattern
+        if case RegularType.phoneNumber(.system) = regularType {
+            return try? NSDataDetector(types: NSTextCheckingTypes(NSTextCheckingResult.CheckingType.phoneNumber.rawValue))
+        }
+        
+        if case RegularType.url(.system) = regularType {
+            return try? NSDataDetector(types: NSTextCheckingTypes(NSTextCheckingResult.CheckingType.link.rawValue))
+        }
+        
+        return regexWithPattern(pattern)
+    }
+    
+    /// 获取匹配结果集
+    ///
+    /// - Parameters:
+    ///   - regularType: 检查类型
+    ///   - string: 需要被匹配的字符串
+    ///   - filterPredicate: 过滤条件
+    /// - Returns: [MatchResultType]
+    public static func regexMatches(regularType: RegularType, string: String?, filterPredicate: ((String) throws -> Bool)? = nil) rethrows -> [MatchResultType] {
+        guard let internalString = string, let regex = regexWithRegularType(regularType) else {
+            return []
+        }
+        
+        let matches = regex.matches(in: internalString)
+        var resultTypes = [MatchResultType]()
+        for result in matches {
+            let nsRange = result.range
+            let checkString = internalString.subString(with: nsRange)
+            if try filterPredicate?(checkString) == true {
+                continue
+            }
+            let resultType = MatchResultType(regularType: regularType, rangeString: checkString, nsRange: nsRange, checkingResult: result)
+            resultTypes.append(resultType)
+        }
+        
+        /*
+        // 由于添加了一个过滤规则,所以这里不能使用map函数了 map函数中无法使用break和continue等函数
+        let resultTypes = matches.map { (result) -> MatchResultType in
+            let nsRange = result.range
+            let checkString = internalString.subString(with: nsRange)
+            let resultType = MatchResultType(regularType: regularType, rangeString: checkString, nsRange: nsRange, checkingResult: result)
+            return resultType
+        }
+        */
+        return resultTypes
+    }
+    
+    /// 获取非匹配结果
+    ///
+    /// - Parameters:
+    ///   - regularTypes: 检查类型集合
+    ///   - string: 需要被匹配的字符串
+    /// - Returns: [MatchResultType]
+    public static func regexNotMatches(regularTypes: [RegularType], string: String?) -> [MatchResultType] {
+        var allMatches = [MatchResultType]()
+        for regularType in regularTypes {
+            let matches = regexMatches(regularType: regularType, string: string)
+            allMatches = allMatches + matches
+        }
+        return regexNotMatches(matches: allMatches, string: string)
+    }
+    
+    /// 获取非匹配的结果集
+    ///
+    /// - Parameters:
+    ///   - matches: 匹配的结果集
+    ///   - string: 需要被匹配的字符串
+    /// - Returns: [MatchResultType]
+    public static func regexNotMatches(matches: [MatchResultType], string: String?) -> [MatchResultType] {
+        guard let noChangeString = string else {
+            return []
+        }
+        var changeString = noChangeString
+        
+        for match in matches {
+            let stringInfo = match.info
+            changeString = changeString.replacingOccurrences(of: stringInfo.rangeString, with: "`")
+        }
+        
+        let notMatchStrings = changeString.split(separator: "`").map { return String($0) }
+        let others = notMatchStrings.map { (notMatchString) -> MatchResultType in
+            let range = noChangeString.range(of: notMatchString)!
+            let nsRange = noChangeString.nsRange(from: range)
+            let notMatchResult = MatchResultType(rangeString: notMatchString, nsRange: nsRange, checkingResult: nil)
+            return notMatchResult
+        }
+        return others
+    }
+    
+    /// 根据匹配与非匹配的结果集按按照NSRange的location顺序排列结果数组
+    ///
+    /// - Parameters:
+    ///   - matches: 匹配结果集
+    ///   - others: 非匹配结果集
+    /// - Returns: 顺序排列结果集
+    public static func widgets(matches: [MatchResultType], notMatches: [MatchResultType]) -> [MatchResultType] {
+        let widgets = (matches + notMatches).sorted { return $0.info.nsRange.location < $1.info.nsRange.location }
+        return widgets
+    }
+}
