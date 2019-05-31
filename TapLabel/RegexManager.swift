@@ -13,6 +13,18 @@ public class RegexManager {
     /// 正则缓存池
     public static var regularExpresionPool = [String: NSRegularExpression]()
     
+    /// 替换符
+    public static var replace = "Ω" {
+        didSet {
+            if oldValue != replace {
+                separator = Character.init(replace)
+            }
+        }
+    }
+    
+    /// 分割符 随着替换符同步更换
+    static var separator = Character.init("Ω")
+    
     /// 空字符串
     public static var spaceCharacterSet: CharacterSet = {
         let characterSet = NSMutableCharacterSet(charactersIn: "\u{00a0}")
@@ -30,13 +42,13 @@ public class RegexManager {
     /// - Parameter pattern: 正则字符串
     /// - Returns: NSRegularExpression
     /// - Throws: RegexError
-    public static func regexWithPattern(_ pattern: String) -> NSRegularExpression? {
+    public static func regexWithPattern(_ pattern: String, options: NSRegularExpression.Options = []) -> NSRegularExpression? {
         if let regex = regularExpresionPool[pattern] {
             return regex
         } else {
             do {
                 let regularExpression: NSRegularExpression
-                regularExpression =  try NSRegularExpression(pattern: pattern, options:NSRegularExpression.Options.caseInsensitive)
+                regularExpression =  try NSRegularExpression(pattern: pattern, options: options)
                 regularExpresionPool[pattern] = regularExpression
                 return regularExpression
             } catch {
@@ -69,6 +81,7 @@ public class RegexManager {
     ///   - string: 需要被匹配的字符串
     ///   - filterPredicate: 过滤条件
     /// - Returns: [MatchResultType]
+    /// - Throws: 抛出异常
     public static func regexMatches(regularType: RegularType, string: String?, filterPredicate: ((String) throws -> Bool)? = nil) rethrows -> [MatchResultType] {
         guard let internalString = string, let regex = regexWithRegularType(regularType) else {
             return []
@@ -98,23 +111,36 @@ public class RegexManager {
         return resultTypes
     }
     
-    /// 获取非匹配结果
+    /// 获取匹配所有的结果集
+    ///
+    /// - Parameters:
+    ///   - regularType: 检查类型集合
+    ///   - string: 需要被匹配的字符串
+    ///   - filterPredicate: 过滤条件
+    /// - Returns: [MatchResultType]
+    /// - Throws: 抛出异常
+    public static func regexMatches(regularTypes: [RegularType], string: String?, filterPredicate: ((String) throws -> Bool)? = nil) rethrows -> [MatchResultType] {
+        var allMatches = [MatchResultType]()
+        for regularType in regularTypes {
+            let matches = try regexMatches(regularType: regularType, string: string, filterPredicate: filterPredicate)
+            allMatches = allMatches + matches
+        }
+        return allMatches
+    }
+    
+    /// 获取非匹配所有的结果集
     ///
     /// - Parameters:
     ///   - regularTypes: 检查类型集合
     ///   - string: 需要被匹配的字符串
     /// - Returns: [MatchResultType]
     public static func regexNotMatches(regularTypes: [RegularType], string: String?) -> [MatchResultType] {
-        var allMatches = [MatchResultType]()
-        for regularType in regularTypes {
-            let matches = regexMatches(regularType: regularType, string: string)
-            allMatches = allMatches + matches
-        }
+        let allMatches = regexMatches(regularTypes: regularTypes, string: string)
         return regexNotMatches(matches: allMatches, string: string)
     }
     
     /// 获取非匹配的结果集
-    ///
+    /// 注意里面用于替换和分割的字符Ω可以会与文本重复
     /// - Parameters:
     ///   - matches: 匹配的结果集
     ///   - string: 需要被匹配的字符串
@@ -127,10 +153,10 @@ public class RegexManager {
         
         for match in matches {
             let stringInfo = match.info
-            changeString = changeString.replacingOccurrences(of: stringInfo.rangeString, with: "`")
+            changeString = changeString.replacingOccurrences(of: stringInfo.rangeString, with: replace)
         }
         
-        let notMatchStrings = changeString.split(separator: "`").map { return String($0) }
+        let notMatchStrings = changeString.split(separator: separator).map { return String($0) }
         let others = notMatchStrings.map { (notMatchString) -> MatchResultType in
             let range = noChangeString.range(of: notMatchString)!
             let nsRange = noChangeString.nsRange(from: range)
@@ -138,6 +164,20 @@ public class RegexManager {
             return notMatchResult
         }
         return others
+    }
+    
+    /// 根据匹配与非匹配的结果集按按照NSRange的location顺序排列结果数组
+    ///
+    /// - Parameters:
+    ///   - regularTypes: 检查类型集合
+    ///   - string: 需要被匹配的字符串
+    ///   - filterPredicate: 过滤条件
+    /// - Returns: 顺序排列结果集
+    /// - Throws: 抛出异常
+    public static func widgets(regularTypes: [RegularType], string: String?, filterPredicate: ((String) throws -> Bool)? = nil) rethrows -> [MatchResultType] {
+        let allMatches = try regexMatches(regularTypes: regularTypes, string: string, filterPredicate: filterPredicate)
+        let notMatches = regexNotMatches(matches: allMatches, string: string)
+        return widgets(matches: allMatches, notMatches: notMatches)
     }
     
     /// 根据匹配与非匹配的结果集按按照NSRange的location顺序排列结果数组

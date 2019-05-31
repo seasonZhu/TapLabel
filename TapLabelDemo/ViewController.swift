@@ -38,10 +38,17 @@ extension ViewController {
         /// 非匹配的集合
         let notMatches = RegexManager.regexNotMatches(matches: matches, string: string)
         /// 通过NSRange的location按字符串表述的顺序 排列组件
-        let newWidgets = RegexManager.widgets(matches: matches, notMatches: notMatches)
+        let widgets = RegexManager.widgets(matches: matches, notMatches: notMatches)
         
         /// 打印
-        for widget in newWidgets {
+        for widget in widgets {
+            print(widget, widget.info.rangeString, widget.info.nsRange)
+        }
+        
+        /// 一口气进行组件化并打印
+        let newWidget = RegexManager.widgets(regularTypes: [.phoneNumber(.system), .url(.system), .metion(.system), .topic(.system), .custom("云鹤")], string: string)
+        print("一口气进行组件化并打印")
+        for widget in newWidget {
             print(widget, widget.info.rangeString, widget.info.nsRange)
         }
     }
