@@ -33,3 +33,19 @@ extension String {
         return (self as NSString).substring(with: range)
     }
 }
+
+// MARK: - 富文本的运算符
+extension NSAttributedString {
+    
+    public static func += (lhs: inout NSAttributedString, rhs: NSAttributedString) {
+        let string = NSMutableAttributedString(attributedString: lhs)
+        string.append(rhs)
+        lhs = string
+    }
+    
+    public static func + (lhs: NSAttributedString, rhs: NSAttributedString) -> NSAttributedString {
+        let string = NSMutableAttributedString(attributedString: lhs)
+        string.append(rhs)
+        return NSAttributedString(attributedString: string)
+    }
+}

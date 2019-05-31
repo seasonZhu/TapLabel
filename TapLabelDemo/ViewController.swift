@@ -17,6 +17,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         tapLabelBegin()
+        //think()
     }
 }
 
@@ -24,15 +25,15 @@ extension ViewController {
     func tapLabelBegin() {
         
         /// 匹配手机号 并且过滤掉13437156081这个号码
-        let phoneResults = RegexManager.regexMatches(regularType: .phoneNumber(.system, .nothing), string: string) { matche in matche == "13437156081" }
+        let phoneResults = RegexManager.regexMatches(regularType: .phoneNumber(.system, .phoneNumber), string: string) { matche in matche == "13437156081" }
         /// 匹配网址
-        let urlResults = RegexManager.regexMatches(regularType: .url(.system, .nothing), string: string)
+        let urlResults = RegexManager.regexMatches(regularType: .url(.system, .url), string: string)
         /// 匹配@某人
-        let atResults = RegexManager.regexMatches(regularType: .metion(.system, .nothing), string: string)
+        let atResults = RegexManager.regexMatches(regularType: .mention(.system, .mention), string: string)
         /// 匹配话题
-        let topicResults = RegexManager.regexMatches(regularType: .topic(.system, .nothing), string: string)
+        let topicResults = RegexManager.regexMatches(regularType: .topic(.system, .topic), string: string)
         /// 自定义匹配
-        let customResults = RegexManager.regexMatches(regularType: .custom("云鹤", .nothing), string: string)
+        let customResults = RegexManager.regexMatches(regularType: .custom("云鹤", .custom), string: string)
         /// 所有匹配的到的集合
         let matches = phoneResults + urlResults + atResults + topicResults + customResults
         /// 非匹配的集合
@@ -46,11 +47,38 @@ extension ViewController {
         }
         
         /// 一口气进行组件化并打印
-        let newWidget = RegexManager.widgets(regularTypes: [.phoneNumber(.system, .nothing), .url(.system, .nothing), .metion(.system, .nothing), .topic(.system, .nothing), .custom("云鹤", .nothing)], string: string)
+        let newWidget = RegexManager.widgets(regularTypes: [.phoneNumber(.system, .nothing), .url(.system, .nothing), .mention(.system, .nothing), .topic(.system, .nothing), .custom("云鹤", .nothing)], string: string)
         print("一口气进行组件化并打印")
         for widget in newWidget {
             print(widget, widget.info.rangeString, widget.info.nsRange)
         }
+        
+        /*
+        /// 没有封装的方法
+        let strings = widgets.map { (result) -> NSAttributedString in
+            return result.addNotMatchAttributes(.notMatch)
+        }
+        
+        var attributedString =  NSAttributedString()
+        for string in strings {
+            attributedString += string
+        }
+         */
+        
+        let attributedString = widgets.addNotMatchAttributes(.notMatch)
+        
+        let label = TapLabel(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 200))
+        label.attributedText = attributedString
+        //label.text = string
+        label.numberOfLines = 0
+        label.font = UIFont.systemFont(ofSize: 20)
+        label.lineSpacing = 4
+        label.setTapCallback { (result) in
+            print(result, result.info.rangeString, result.info.nsRange)
+        }
+        label.center = view.center
+        label.matchResults = matches
+        view.addSubview(label)
     }
 }
 
@@ -133,5 +161,33 @@ private extension String {
             let to = String.Index(to16, within: self)
             else { return nil }
         return from ..< to
+    }
+}
+
+extension Dictionary where Key == NSAttributedString.Key, Value == Any {
+        
+    //MARK:- 下面这些只是为了配合测试才写的例子
+    static var url: Attributes {
+        return [NSAttributedString.Key.foregroundColor: UIColor.blue]
+    }
+    
+    static var phoneNumber: Attributes {
+        return [NSAttributedString.Key.foregroundColor: UIColor.lightGray]
+    }
+    
+    static var mention: Attributes {
+        return [NSAttributedString.Key.foregroundColor: UIColor.red]
+    }
+    
+    static var topic: Attributes {
+        return [NSAttributedString.Key.foregroundColor: UIColor.orange]
+    }
+    
+    static var custom: Attributes {
+        return [NSAttributedString.Key.foregroundColor: UIColor.green]
+    }
+    
+    static var notMatch: Attributes {
+        return [NSAttributedString.Key.foregroundColor: UIColor.purple]
     }
 }

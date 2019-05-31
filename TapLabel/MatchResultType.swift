@@ -16,14 +16,14 @@ public typealias NotMatchInfo = MatchInfo
 /// 匹配结果
 ///
 /// - topic: 话题
-/// - metion: @某人
+/// - mention: @某人
 /// - url: 网址
 /// - phoneNumber: 手机号
 /// - custom: 自定义
 /// - notMatch: 非匹配结果
 public enum MatchResultType {
     case topic(MatchInfo)
-    case metion(MatchInfo)
+    case mention(MatchInfo)
     case url(MatchInfo)
     case phoneNumber(MatchInfo)
     case custom(MatchInfo)
@@ -36,17 +36,17 @@ public enum MatchResultType {
     ///   - rangeString: range所在的字符串
     ///   - nsRange: NSRange
     ///   - checkingResult: NSTextCheckingResult
-    public init(regularType: RegularType? = nil, rangeString: String, nsRange: NSRange, checkingResult: NSTextCheckingResult?) {
+    public init(regularType: RegularType? = nil, rangeString: String, nsRange: NSRange, attributes: Attributes = .nothing,  checkingResult: NSTextCheckingResult?) {
         guard let type = regularType else {
-            self = .notMatch((rangeString, nsRange, .nothing, checkingResult))
+            self = .notMatch((rangeString, nsRange, attributes, checkingResult))
             return
         }
         
         switch type {
         case .topic:
             self = .topic((rangeString, nsRange, type.attributes, checkingResult))
-        case .metion:
-            self = .metion((rangeString, nsRange, type.attributes, checkingResult))
+        case .mention:
+            self = .mention((rangeString, nsRange, type.attributes, checkingResult))
         case .url:
             self = .url((rangeString, nsRange, type.attributes, checkingResult))
         case .phoneNumber:
@@ -65,7 +65,7 @@ extension MatchResultType {
         switch self {
         case .topic(let info):
             matchInfo = info
-        case .metion(let info):
+        case .mention(let info):
             matchInfo = info
         case .url(let info):
             matchInfo = info
@@ -98,6 +98,23 @@ extension MatchResultType {
     public var checkingResult: NSTextCheckingResult? {
         return info.checkingResult
     }
+    
+    /// 获取富文本
+    public var attributedString: NSAttributedString {
+        return NSAttributedString(string: rangeString, attributes: attributes)
+    }
+    
+    /// 获取富文本并且为没有匹配到的文字添加新的富文本特性
+    ///
+    /// - Parameter attributes: 富文本特性
+    /// - Returns: 富文本
+    public func addNotMatchAttributes(_ attributes: Attributes) -> NSAttributedString {
+        if case .notMatch = self {
+            return NSAttributedString(string: rangeString, attributes: attributes)
+        }else {
+            return attributedString
+        }
+    }
 }
 
 extension MatchResultType: CustomStringConvertible {
@@ -106,7 +123,7 @@ extension MatchResultType: CustomStringConvertible {
         switch self {
         case .topic:
             description = "话题"
-        case .metion:
+        case .mention:
             description = "提到"
         case .url:
             description = "网址"
@@ -118,5 +135,46 @@ extension MatchResultType: CustomStringConvertible {
             description = "非正则"
         }
         return description
+    }
+}
+
+extension Array where Element == MatchResultType {
+    
+    /// 通过NSRange.location属性从小到大排列
+    public var sortByNSRangeLocation: [MatchResultType] {
+        return sorted { return $0.info.nsRange.location < $1.info.nsRange.location }
+    }
+    
+    /// MatchResultType数组进行字符串化
+    public var attributedString: NSAttributedString {
+        let strings = self.map { (result) -> NSAttributedString in
+            return result.attributedString
+        }
+        
+        var attributedString =  NSAttributedString()
+        for string in strings {
+            attributedString += string
+        }
+        return attributedString
+    }
+    
+    /// MatchResultType数组获取富文本并且为没有匹配到的文字添加新的富文本特性
+    ///
+    /// - Parameter attributes: 富文本特性
+    /// - Returns: 富文本
+    public func addNotMatchAttributes(_ attributes: Attributes) -> NSAttributedString {
+        let strings = self.map { (result) -> NSAttributedString in
+            if case .notMatch = result {
+                return NSAttributedString(string: result.rangeString, attributes: attributes)
+            }else {
+                return result.attributedString
+            }
+        }
+        
+        var attributedString =  NSAttributedString()
+        for string in strings {
+            attributedString += string
+        }
+        return attributedString
     }
 }

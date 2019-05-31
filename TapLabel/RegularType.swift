@@ -11,13 +11,13 @@ import Foundation
 /// 字符串中需要检查的类型
 ///
 /// - topic: 话题 #话题#
-/// - metion: @某人
+/// - mention: @某人
 /// - url: 网址
 /// - phoneNumber: 电话号码
 /// - custom: 自定义
 public enum RegularType {
     case topic(PatternType, Attributes)
-    case metion(PatternType, Attributes)
+    case mention(PatternType, Attributes)
     case url(PatternType, Attributes)
     case phoneNumber(PatternType, Attributes)
     case custom(String, Attributes)
@@ -45,7 +45,7 @@ extension RegularType {
             case .system:
                 return RegularType.topicPattern
             }
-        case .metion(let subType, _):
+        case .mention(let subType, _):
             switch subType {
             case .custom(let pattern):
                 return pattern
@@ -79,7 +79,7 @@ extension RegularType {
         switch self {
         case .topic(_, let attributes):
             atts = attributes
-        case .metion(_, let attributes):
+        case .mention(_, let attributes):
             atts = attributes
         case .url(_, let attributes):
             atts = attributes
@@ -98,7 +98,7 @@ extension RegularType: CustomStringConvertible {
         switch self {
         case .topic:
             description = "话题"
-        case .metion:
+        case .mention:
             description = "提到"
         case .url:
             description = "网址"

@@ -187,7 +187,7 @@ public class RegexManager {
     ///   - others: 非匹配结果集
     /// - Returns: 顺序排列结果集
     public static func widgets(matches: [MatchResultType], notMatches: [MatchResultType]) -> [MatchResultType] {
-        let widgets = (matches + notMatches).sorted { return $0.info.nsRange.location < $1.info.nsRange.location }
+        let widgets = (matches + notMatches).sortByNSRangeLocation
         return widgets
     }
 }
