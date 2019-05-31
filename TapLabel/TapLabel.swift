@@ -22,15 +22,20 @@ public class TapLabel: UILabel {
     /// 配置规则
     public var regularTypes = [RegularType]()
     
+    public var notMatchAttributes: Attributes?
+    
+    /// 段落间距
     @IBInspectable public var lineSpacing: CGFloat = 0 {
         didSet { updateTextStorage(parseText: false) }
     }
     
+    /// 最小行高
     @IBInspectable public var minimumLineHeight: CGFloat = 0 {
         didSet { updateTextStorage(parseText: false) }
     }
     
     // MARK: - override UILabel properties
+    
     override open var text: String? {
         didSet { updateTextStorage() }
     }
@@ -146,13 +151,16 @@ extension TapLabel {
             return
         }
         
-        let mutAttrString = addLineBreak(attributedText)
-        
         if parseText {
             clearActiveElements()
         }
         
+        let all = RegexManager.widgets(regularTypes: regularTypes, string: self.text)
+        matchResults = RegexManager.regexMatches(regularTypes: regularTypes, string: self.text)
+        var mutAttrString = notMatchAttributes == nil ? all.attributedString : all.addNotMatchAttributes(notMatchAttributes!)
+        mutAttrString = addLineBreak(mutAttrString)
         textStorage.setAttributedString(mutAttrString)
+        
         _customizing = true
         text = mutAttrString.string
         _customizing = false
@@ -170,7 +178,9 @@ extension TapLabel {
         paragraphStyle.alignment = textAlignment
         paragraphStyle.lineSpacing = lineSpacing
         paragraphStyle.minimumLineHeight = minimumLineHeight > 0 ? minimumLineHeight: self.font.pointSize * 1.14
+        
         attributes[NSAttributedString.Key.paragraphStyle] = paragraphStyle
+        
         mutAttrString.setAttributes(attributes, range: range)
         return mutAttrString
     }
@@ -197,6 +207,7 @@ extension TapLabel {
             guard let selectedElement = selectedMatchResult else { return avoidSuperCall }
             //print("点击了\(selectedElement.info.rangeString)")
             tapCallback?(selectedElement)
+            delegate?.didTap(self, matchResult: selectedElement)
             avoidSuperCall = true
         case .cancelled:
             selectedMatchResult = nil

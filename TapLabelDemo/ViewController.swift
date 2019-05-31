@@ -12,7 +12,7 @@ import TapLabel
 class ViewController: UIViewController {
     
     let string = """
-    我正在尝试使用系统的正则系统,我的手机号是13437156081,我另外一个手机号 @DY 是19927101229,今天的话题是 #好冷啊#,我经常去的网站是www.hao123.com,以及lostsakura.com我的住址是武汉市硚口区云鹤小区13345678910,
+    我正在尝试使用系统的正则表达式,我的手机号是18837156081,我另外一个手机号 @season 是19927101229,今天的话题是 #好冷啊#,我经常去的网站是www.hao123.com,以及lostsakura.com我的住址是云鹤馆,13345678910,
     """
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -65,19 +65,22 @@ extension ViewController {
         }
          */
         
-        let attributedString = widgets.addNotMatchAttributes(.notMatch)
+        //let attributedString = widgets.addNotMatchAttributes(.notMatch)
         
-        let label = TapLabel(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 200))
-        label.attributedText = attributedString
-        //label.text = string
+        let label = TapLabel(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 600))
         label.numberOfLines = 0
-        label.font = UIFont.systemFont(ofSize: 20)
-        label.lineSpacing = 4
+        label.text = string
+        label.notMatchAttributes = .notMatch
+        // 设置字体大小没有效果 需要每一个都进行设置 目前还没有找到原因
+        //label.font = UIFont.systemFont(ofSize: 25)
+        label.regularTypes = [.phoneNumber(.system, .phoneNumber), .url(.system, .url), .mention(.system, .mention), .topic(.system, .topic), .custom("云鹤", .custom)]
+        label.lineSpacing = 10
         label.setTapCallback { (result) in
             print(result, result.info.rangeString, result.info.nsRange)
         }
         label.center = view.center
-        label.matchResults = matches
+        label.delegate = self
+        //label.matchResults = matches
         view.addSubview(label)
     }
 }
@@ -143,51 +146,47 @@ extension ViewController {
     }
 }
 
-// MARK: - 这个和String分类中的很像 可以说基本一致 这里是为了配合上面的NSRegularExpression使用
-private extension String {
-    func nsRange(from range: Range<String.Index>) -> NSRange {
-        let utf16view = self.utf16
-        let from = range.lowerBound.samePosition(in: utf16view) ?? self.startIndex
-        let to = range.upperBound.samePosition(in: utf16view) ?? self.endIndex
-        return NSMakeRange(utf16view.distance(from: utf16view.startIndex, to: from),
-                           utf16view.distance(from: from, to: to))
+extension ViewController: TapLabelDelegate {
+    func didTap(_ label: TapLabel, matchResult: MatchResultType) {
+        let alertVC = UIAlertController(title: matchResult.description, message: matchResult.rangeString, preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        alertVC.addAction(okAction)
+        present(alertVC, animated: true)
     }
     
-    func range(from nsRange: NSRange) -> Range<String.Index>? {
-        guard
-            let from16 = utf16.index(utf16.startIndex, offsetBy: nsRange.location, limitedBy: utf16.endIndex),
-            let to16 = utf16.index(from16, offsetBy: nsRange.length, limitedBy: utf16.endIndex),
-            let from = String.Index(from16, within: self),
-            let to = String.Index(to16, within: self)
-            else { return nil }
-        return from ..< to
-    }
+    
 }
 
 extension Dictionary where Key == NSAttributedString.Key, Value == Any {
         
     //MARK:- 下面这些只是为了配合测试才写的例子
     static var url: Attributes {
-        return [NSAttributedString.Key.foregroundColor: UIColor.blue]
+        return [NSAttributedString.Key.foregroundColor: UIColor.blue,
+                NSAttributedString.Key.font: UIFont.systemFont(ofSize: 20)]
     }
     
     static var phoneNumber: Attributes {
-        return [NSAttributedString.Key.foregroundColor: UIColor.lightGray]
+        return [NSAttributedString.Key.foregroundColor: UIColor.lightGray,
+                NSAttributedString.Key.font: UIFont.systemFont(ofSize: 20)]
     }
     
     static var mention: Attributes {
-        return [NSAttributedString.Key.foregroundColor: UIColor.red]
+        return [NSAttributedString.Key.foregroundColor: UIColor.red,
+                NSAttributedString.Key.font: UIFont.systemFont(ofSize: 20)]
     }
     
     static var topic: Attributes {
-        return [NSAttributedString.Key.foregroundColor: UIColor.orange]
+        return [NSAttributedString.Key.foregroundColor: UIColor.orange,
+                NSAttributedString.Key.font: UIFont.systemFont(ofSize: 20)]
     }
     
     static var custom: Attributes {
-        return [NSAttributedString.Key.foregroundColor: UIColor.green]
+        return [NSAttributedString.Key.foregroundColor: UIColor.green,
+                NSAttributedString.Key.font: UIFont.systemFont(ofSize: 20)]
     }
     
     static var notMatch: Attributes {
-        return [NSAttributedString.Key.foregroundColor: UIColor.purple]
+        return [NSAttributedString.Key.foregroundColor: UIColor.purple,
+                NSAttributedString.Key.font: UIFont.systemFont(ofSize: 20)]
     }
 }
