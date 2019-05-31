@@ -9,8 +9,8 @@
 import Foundation
 
 
-/// 匹配结果和非匹配的结果 range所在的字符串 NSRange区间 NSTextCheckingResult
-public typealias MatchInfo = (rangeString: String, nsRange: NSRange, checkingResult: NSTextCheckingResult?)
+/// 匹配结果和非匹配的结果 range所在的字符串 NSRange区间 后面如果需要将String转为富文本 富文本的特性 NSTextCheckingResult
+public typealias MatchInfo = (rangeString: String, nsRange: NSRange, attributes: Attributes, checkingResult: NSTextCheckingResult?)
 public typealias NotMatchInfo = MatchInfo
 
 /// 匹配结果
@@ -38,21 +38,21 @@ public enum MatchResultType {
     ///   - checkingResult: NSTextCheckingResult
     public init(regularType: RegularType? = nil, rangeString: String, nsRange: NSRange, checkingResult: NSTextCheckingResult?) {
         guard let type = regularType else {
-            self = .notMatch((rangeString, nsRange, checkingResult))
+            self = .notMatch((rangeString, nsRange, .nothing, checkingResult))
             return
         }
         
         switch type {
         case .topic:
-            self = .topic((rangeString, nsRange, checkingResult))
+            self = .topic((rangeString, nsRange, type.attributes, checkingResult))
         case .metion:
-            self = .metion((rangeString, nsRange, checkingResult))
+            self = .metion((rangeString, nsRange, type.attributes, checkingResult))
         case .url:
-            self = .url((rangeString, nsRange, checkingResult))
+            self = .url((rangeString, nsRange, type.attributes, checkingResult))
         case .phoneNumber:
-            self = .phoneNumber((rangeString, nsRange, checkingResult))
+            self = .phoneNumber((rangeString, nsRange, type.attributes, checkingResult))
         case .custom:
-            self = .custom((rangeString, nsRange, checkingResult))
+            self = .custom((rangeString, nsRange, type.attributes, checkingResult))
         }
     }
 }
@@ -77,6 +77,26 @@ extension MatchResultType {
             matchInfo = info
         }
         return matchInfo
+    }
+    
+    /// 获取结果信息的字符串
+    public var rangeString: String {
+        return info.rangeString
+    }
+    
+    /// 获取结果信息的nsRange
+    public var nsRange: NSRange {
+        return info.nsRange
+    }
+    
+    /// 获取结果的富文本特性结果集
+    public var attributes: Attributes {
+        return info.attributes
+    }
+    
+    /// 获取匹配结果
+    public var checkingResult: NSTextCheckingResult? {
+        return info.checkingResult
     }
 }
 

@@ -24,15 +24,15 @@ extension ViewController {
     func tapLabelBegin() {
         
         /// 匹配手机号 并且过滤掉13437156081这个号码
-        let phoneResults = RegexManager.regexMatches(regularType: .phoneNumber(.system), string: string) { matche in matche == "13437156081" }
+        let phoneResults = RegexManager.regexMatches(regularType: .phoneNumber(.system, .nothing), string: string) { matche in matche == "13437156081" }
         /// 匹配网址
-        let urlResults = RegexManager.regexMatches(regularType: .url(.system), string: string)
+        let urlResults = RegexManager.regexMatches(regularType: .url(.system, .nothing), string: string)
         /// 匹配@某人
-        let atResults = RegexManager.regexMatches(regularType: .metion(.system), string: string)
+        let atResults = RegexManager.regexMatches(regularType: .metion(.system, .nothing), string: string)
         /// 匹配话题
-        let topicResults = RegexManager.regexMatches(regularType: .topic(.system), string: string)
+        let topicResults = RegexManager.regexMatches(regularType: .topic(.system, .nothing), string: string)
         /// 自定义匹配
-        let customResults = RegexManager.regexMatches(regularType: .custom("云鹤"), string: string)
+        let customResults = RegexManager.regexMatches(regularType: .custom("云鹤", .nothing), string: string)
         /// 所有匹配的到的集合
         let matches = phoneResults + urlResults + atResults + topicResults + customResults
         /// 非匹配的集合
@@ -46,7 +46,7 @@ extension ViewController {
         }
         
         /// 一口气进行组件化并打印
-        let newWidget = RegexManager.widgets(regularTypes: [.phoneNumber(.system), .url(.system), .metion(.system), .topic(.system), .custom("云鹤")], string: string)
+        let newWidget = RegexManager.widgets(regularTypes: [.phoneNumber(.system, .nothing), .url(.system, .nothing), .metion(.system, .nothing), .topic(.system, .nothing), .custom("云鹤", .nothing)], string: string)
         print("一口气进行组件化并打印")
         for widget in newWidget {
             print(widget, widget.info.rangeString, widget.info.nsRange)

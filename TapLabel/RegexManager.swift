@@ -63,11 +63,11 @@ public class RegexManager {
     /// - Returns: 正则对象NSRegularExpression
     public static func regexWithRegularType(_ regularType: RegularType) -> NSRegularExpression? {
         let pattern = regularType.pattern
-        if case RegularType.phoneNumber(.system) = regularType {
+        if case RegularType.phoneNumber(.system, _) = regularType {
             return try? NSDataDetector(types: NSTextCheckingTypes(NSTextCheckingResult.CheckingType.phoneNumber.rawValue))
         }
         
-        if case RegularType.url(.system) = regularType {
+        if case RegularType.url(.system, _) = regularType {
             return try? NSDataDetector(types: NSTextCheckingTypes(NSTextCheckingResult.CheckingType.link.rawValue))
         }
         

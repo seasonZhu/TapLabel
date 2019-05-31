@@ -16,11 +16,11 @@ import Foundation
 /// - phoneNumber: 电话号码
 /// - custom: 自定义
 public enum RegularType {
-    case topic(PatternType)
-    case metion(PatternType)
-    case url(PatternType)
-    case phoneNumber(PatternType)
-    case custom(String)
+    case topic(PatternType, Attributes)
+    case metion(PatternType, Attributes)
+    case url(PatternType, Attributes)
+    case phoneNumber(PatternType, Attributes)
+    case custom(String, Attributes)
     
     /// 正则字符串的样式
     ///
@@ -38,21 +38,21 @@ extension RegularType {
     /// 获取正则表达字符串
     public var pattern: String {
         switch self {
-        case .topic(let subType):
+        case .topic(let subType, _):
             switch subType {
             case .custom(let pattern):
                 return pattern
             case .system:
                 return RegularType.topicPattern
             }
-        case .metion(let subType):
+        case .metion(let subType, _):
             switch subType {
             case .custom(let pattern):
                 return pattern
             case .system:
                 return RegularType.mentionPattern
             }
-        case .url(let subType):
+        case .url(let subType, _):
             switch subType {
             case .custom(let pattern):
                 return pattern
@@ -60,7 +60,7 @@ extension RegularType {
                 // UInt64 32
                 return  String(NSTextCheckingResult.CheckingType.link.rawValue)
             }
-        case .phoneNumber(let subType):
+        case .phoneNumber(let subType, _):
             switch subType {
             case .custom(let pattern):
                 return pattern
@@ -68,9 +68,27 @@ extension RegularType {
                 // UInt64 2048
                 return  String(NSTextCheckingResult.CheckingType.phoneNumber.rawValue)
             }
-        case .custom(let pattern):
+        case .custom(let pattern, _):
             return pattern
         }
+    }
+    
+    /// 获取富文本的特性
+    public var attributes: Attributes {
+        let atts: Attributes
+        switch self {
+        case .topic(_, let attributes):
+            atts = attributes
+        case .metion(_, let attributes):
+            atts = attributes
+        case .url(_, let attributes):
+            atts = attributes
+        case .phoneNumber(_, let attributes):
+            atts = attributes
+        case .custom(_, let attributes):
+            atts = attributes
+        }
+        return atts
     }
 }
 
@@ -102,4 +120,15 @@ extension RegularType {
     /// @某人的正则表达字符串
     // 你好呀 @DY *最后两边都各有一个空格*
     static let mentionPattern = "(?:^|\\s|$|[.])@[\\p{L}0-9_]*"
+}
+
+/// 富文本特性简写
+public typealias Attributes = [NSAttributedString.Key: Any]
+
+extension Dictionary where Key == NSAttributedString.Key, Value == Any {
+    
+    /// 空的富文本特性集合
+    public static var nothing: Attributes {
+        return [:]
+    }
 }
