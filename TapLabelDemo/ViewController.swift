@@ -189,7 +189,8 @@ extension Dictionary where Key == NSAttributedString.Key, Value == Any {
     
     static var notMatch: Attributes {
         return [NSAttributedString.Key.foregroundColor: UIColor.purple,
-                NSAttributedString.Key.font: UIFont.systemFont(ofSize: 20)]
+                NSAttributedString.Key.font: UIFont.systemFont(ofSize: 20),
+                NSAttributedString.Key.strikethroughStyle: NSNumber(value: NSUnderlineStyle.single.rawValue as Int)]
     }
 }
 

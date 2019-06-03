@@ -8,6 +8,7 @@
 
 import Foundation
 
+/// 正则管理器
 public class RegexManager {
     
     /// 正则缓存池
@@ -83,7 +84,7 @@ public class RegexManager {
     ///   - filterList: 过滤列表
     /// - Returns: [MatchResultType]
     /// - Throws: 抛出异常
-    public static func regexMatches(regularType: RegularType, string: String?, filterPredicate: ((String) throws -> Bool)? = nil, filterList: [String] = []) rethrows -> [MatchResultType] {
+    public static func regexMatches(regularType: RegularType, string: String?, filterList: [String] = [], filterPredicate: ((String) throws -> Bool)? = nil) rethrows -> [MatchResultType] {
         guard let internalString = string, let regex = regexWithRegularType(regularType) else {
             return []
         }
@@ -126,10 +127,10 @@ public class RegexManager {
     ///   - filterList: 过滤列表
     /// - Returns: [MatchResultType]
     /// - Throws: 抛出异常
-    public static func regexMatches(regularTypes: [RegularType], string: String?, filterPredicate: ((String) throws -> Bool)? = nil, filterList: [String] = []) rethrows -> [MatchResultType] {
+    public static func regexMatches(regularTypes: [RegularType], string: String?, filterList: [String] = [], filterPredicate: ((String) throws -> Bool)? = nil) rethrows -> [MatchResultType] {
         var allMatches = [MatchResultType]()
         for regularType in regularTypes {
-            let matches = try regexMatches(regularType: regularType, string: string, filterPredicate: filterPredicate, filterList: filterList)
+            let matches = try regexMatches(regularType: regularType, string: string, filterList: filterList, filterPredicate: filterPredicate)
             allMatches = allMatches + matches
         }
         return allMatches
@@ -182,8 +183,8 @@ public class RegexManager {
     ///   - filterList: 过滤列表
     /// - Returns: 顺序排列结果集
     /// - Throws: 抛出异常
-    public static func widgets(regularTypes: [RegularType], string: String?, filterPredicate: ((String) throws -> Bool)? = nil, filterList: [String] = []) rethrows -> [MatchResultType] {
-        let allMatches = try regexMatches(regularTypes: regularTypes, string: string, filterPredicate: filterPredicate, filterList: filterList)
+    public static func widgets(regularTypes: [RegularType], string: String?, filterList: [String] = [], filterPredicate: ((String) throws -> Bool)? = nil) rethrows -> [MatchResultType] {
+        let allMatches = try regexMatches(regularTypes: regularTypes, string: string, filterList: filterList, filterPredicate: filterPredicate)
         let notMatches = regexNotMatches(matches: allMatches, string: string)
         return widgets(matches: allMatches, notMatches: notMatches)
     }
