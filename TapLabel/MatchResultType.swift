@@ -138,6 +138,7 @@ extension MatchResultType: CustomStringConvertible {
     }
 }
 
+// MARK: - 数组元素为MatchResultType的扩展
 extension Array where Element == MatchResultType {
     
     /// 通过NSRange.location属性从小到大排列
@@ -147,13 +148,9 @@ extension Array where Element == MatchResultType {
     
     /// MatchResultType数组进行字符串化
     public var attributedString: NSAttributedString {
-        let strings = self.map { (result) -> NSAttributedString in
-            return result.attributedString
-        }
-        
-        var attributedString =  NSAttributedString()
-        for string in strings {
-            attributedString += string
+        let strings = self.map { $0.attributedString }
+        let attributedString = strings.reduce(NSAttributedString()) { (initAttributedString, string) -> NSAttributedString in
+            return initAttributedString + string
         }
         return attributedString
     }
@@ -171,9 +168,8 @@ extension Array where Element == MatchResultType {
             }
         }
         
-        var attributedString =  NSAttributedString()
-        for string in strings {
-            attributedString += string
+        let attributedString = strings.reduce(NSAttributedString()) { (initAttributedString, string) -> NSAttributedString in
+            return initAttributedString + string
         }
         return attributedString
     }

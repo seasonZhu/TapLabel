@@ -16,12 +16,15 @@ public protocol TapLabelDelegate: class {
 /// 文字根据正则可点击的Label
 public class TapLabel: UILabel {
     
+    //MARK:- 对外属性
+    
     /// 代理
     public weak var delegate: TapLabelDelegate?
     
     /// 配置规则
     public var regularTypes = [RegularType]()
     
+    /// 未匹配文字的富文本特性
     public var notMatchAttributes: Attributes?
     
     /// 段落间距
@@ -34,25 +37,25 @@ public class TapLabel: UILabel {
         didSet { updateTextStorage(parseText: false) }
     }
     
-    // MARK: - override UILabel properties
+    // MARK: - 重新UILabel的属性
     
-    override open var text: String? {
+    open override var text: String? {
         didSet { updateTextStorage() }
     }
     
-    override open var attributedText: NSAttributedString? {
+    open override var attributedText: NSAttributedString? {
         didSet { updateTextStorage() }
     }
     
-    override open var font: UIFont! {
+    open override var font: UIFont! {
         didSet { updateTextStorage(parseText: false) }
     }
     
-    override open var textColor: UIColor! {
+    open override var textColor: UIColor! {
         didSet { updateTextStorage(parseText: false) }
     }
     
-    override open var textAlignment: NSTextAlignment {
+    open override var textAlignment: NSTextAlignment {
         didSet { updateTextStorage(parseText: false)}
     }
     
@@ -62,6 +65,13 @@ public class TapLabel: UILabel {
     
     open override var lineBreakMode: NSLineBreakMode {
         didSet { textContainer.lineBreakMode = lineBreakMode }
+    }
+    
+    public override var intrinsicContentSize: CGSize {
+        let superSize = super.intrinsicContentSize
+        textContainer.size = CGSize(width: superSize.width, height: CGFloat.greatestFiniteMagnitude)
+        let size = layoutManager.usedRect(for: textContainer)
+        return CGSize(width: ceil(size.width), height: ceil(size.height))
     }
     
     /// 匹配结果集
@@ -76,55 +86,43 @@ public class TapLabel: UILabel {
     /// 过滤规则
     private var filterPredicate: ((String) -> Bool)?
     
+    /// 高度修正
     private var heightCorrection: CGFloat = 0
     
+    /// NSTextStorage
     private lazy var textStorage = NSTextStorage()
     
+    /// NSLayoutManager
     private lazy var layoutManager = NSLayoutManager()
     
+    /// NSTextContainer
     private lazy var textContainer = NSTextContainer()
     
+    /// 是否正在配置
     private var _customizing: Bool = true
     
-    override public init(frame: CGRect) {
+    //MARK:- 对外方法
+    
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         _customizing = false
         setUpLabel()
     }
     
-    required public init?(coder aDecoder: NSCoder) {
+    public required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         _customizing = false
         setUpLabel()
     }
-    
-    open override func awakeFromNib() {
-        super.awakeFromNib()
-        updateTextStorage()
-    }
-    
-    open override func drawText(in rect: CGRect) {
-        let range = NSRange(location: 0, length: textStorage.length)
-        
-        textContainer.size = rect.size
-        let newOrigin = textOrigin(inRect: rect)
-        
-        layoutManager.drawBackground(forGlyphRange: range, at: newOrigin)
-        layoutManager.drawGlyphs(forGlyphRange: range, at: newOrigin)
-    }
-    
-    // MARK: - customzation
-    @discardableResult
-    open func customize(_ block: (TapLabel) -> ()) -> TapLabel {
-        _customizing = true
-        block(self)
-        _customizing = false
-        updateTextStorage()
-        return self
-    }
 }
 
+// MARK: - 私有方法
 extension TapLabel {
+    
+    /// 文本起始位置
+    ///
+    /// - Parameter rect: CGrect
+    /// - Returns: CGPoint
     private func textOrigin(inRect rect: CGRect) -> CGPoint {
         let usedRect = layoutManager.usedRect(for: textContainer)
         heightCorrection = (rect.height - usedRect.height)/2
@@ -132,6 +130,7 @@ extension TapLabel {
         return CGPoint(x: rect.origin.x, y: glyphOriginY)
     }
     
+    /// 配置Label
     private func setUpLabel() {
         textStorage.addLayoutManager(layoutManager)
         layoutManager.addTextContainer(textContainer)
@@ -141,6 +140,9 @@ extension TapLabel {
         isUserInteractionEnabled = true
     }
     
+    /// 更新TextStorag
+    ///
+    /// - Parameter parseText: 是否配置文字
     private func updateTextStorage(parseText: Bool = true) {
         if _customizing { return }
         // clean up previous active elements
@@ -167,6 +169,10 @@ extension TapLabel {
         setNeedsDisplay()
     }
     
+    /// 富文本添加行距
+    ///
+    /// - Parameter attrString: 富文本
+    /// - Returns: 新的富文本
     private func addLineBreak(_ attrString: NSAttributedString) -> NSMutableAttributedString {
         let mutAttrString = NSMutableAttributedString(attributedString: attrString)
         
@@ -185,11 +191,16 @@ extension TapLabel {
         return mutAttrString
     }
     
+    /// 清除被选中的元素
     private func clearActiveElements() {
         selectedMatchResult = nil
     }
     
-    func onTouch(_ touch: UITouch) -> Bool {
+    /// 是否被点击
+    ///
+    /// - Parameter touch: UITouch
+    /// - Returns: Bool
+    private func onTouch(_ touch: UITouch) -> Bool {
         let location = touch.location(in: self)
         var avoidSuperCall = false
         
@@ -205,7 +216,6 @@ extension TapLabel {
             }
         case .ended:
             guard let selectedElement = selectedMatchResult else { return avoidSuperCall }
-            //print("点击了\(selectedElement.info.rangeString)")
             tapCallback?(selectedElement)
             delegate?.didTap(self, matchResult: selectedElement)
             avoidSuperCall = true
@@ -220,6 +230,10 @@ extension TapLabel {
         return avoidSuperCall
     }
     
+    /// 点击的位置是否有元素
+    ///
+    /// - Parameter location: 位置
+    /// - Returns: 元素
     private func element(at location: CGPoint) -> MatchResultType? {
         guard textStorage.length > 0 else {
             return nil
@@ -244,6 +258,7 @@ extension TapLabel {
     }
 }
 
+// MARK: - 共有的配置方法
 extension TapLabel {
     
     /// 设置回调方法
@@ -266,11 +281,36 @@ extension TapLabel {
         return self
     }
     
-    override public var intrinsicContentSize: CGSize {
-        let superSize = super.intrinsicContentSize
-        textContainer.size = CGSize(width: superSize.width, height: CGFloat.greatestFiniteMagnitude)
-        let size = layoutManager.usedRect(for: textContainer)
-        return CGSize(width: ceil(size.width), height: ceil(size.height))
+    /// 配置化方法
+    ///
+    /// - Parameter block: 配置函数
+    /// - Returns: 对象自己
+    @discardableResult
+    open func customize(_ block: (TapLabel) -> ()) -> TapLabel {
+        _customizing = true
+        block(self)
+        _customizing = false
+        updateTextStorage()
+        return self
+    }
+}
+
+// MARK: - UILabel中的方法重写
+extension TapLabel {
+    
+    open override func awakeFromNib() {
+        super.awakeFromNib()
+        updateTextStorage()
+    }
+    
+    open override func drawText(in rect: CGRect) {
+        let range = NSRange(location: 0, length: textStorage.length)
+        
+        textContainer.size = rect.size
+        let newOrigin = textOrigin(inRect: rect)
+        
+        layoutManager.drawBackground(forGlyphRange: range, at: newOrigin)
+        layoutManager.drawGlyphs(forGlyphRange: range, at: newOrigin)
     }
     
     open override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -298,6 +338,7 @@ extension TapLabel {
     }
 }
 
+// MARK: - UIGestureRecognizerDelegate
 extension TapLabel: UIGestureRecognizerDelegate {
     
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {

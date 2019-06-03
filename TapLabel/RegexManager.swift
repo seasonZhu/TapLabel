@@ -13,7 +13,7 @@ public class RegexManager {
     /// 正则缓存池
     public static var regularExpresionPool = [String: NSRegularExpression]()
     
-    /// 替换符
+    /// 替换符 这里使用Ω 只是这个字符使用的比较少 不代表不会被占用
     public static var replace = "Ω" {
         didSet {
             if oldValue != replace {

@@ -21,6 +21,7 @@ class ViewController: UIViewController {
     }
 }
 
+// MARK: - 实践
 extension ViewController {
     func tapLabelBegin() {
         
@@ -65,11 +66,13 @@ extension ViewController {
         }
          */
         
-        //let attributedString = widgets.addNotMatchAttributes(.notMatch)
+        let attributedString = widgets.addNotMatchAttributes(.notMatch)
         
         let label = TapLabel(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 600))
         label.numberOfLines = 0
-        label.text = string
+        //label.text = string
+        // 这里设置文本还是富文本都是可以的 理论上说是设置文本的
+        label.attributedText = attributedString
         label.notMatchAttributes = .notMatch
         // 设置字体大小没有效果 需要每一个都进行设置 目前还没有找到原因
         //label.font = UIFont.systemFont(ofSize: 25)
@@ -85,6 +88,7 @@ extension ViewController {
     }
 }
 
+// MARK: - 思路
 extension ViewController {
     func think() {
         /// 使用系统的detector可以找到手机号码
@@ -153,8 +157,6 @@ extension ViewController: TapLabelDelegate {
         alertVC.addAction(okAction)
         present(alertVC, animated: true)
     }
-    
-    
 }
 
 extension Dictionary where Key == NSAttributedString.Key, Value == Any {
@@ -188,5 +190,25 @@ extension Dictionary where Key == NSAttributedString.Key, Value == Any {
     static var notMatch: Attributes {
         return [NSAttributedString.Key.foregroundColor: UIColor.purple,
                 NSAttributedString.Key.font: UIFont.systemFont(ofSize: 20)]
+    }
+}
+
+extension String {
+    func nsRange(from range: Range<String.Index>) -> NSRange {
+        let utf16view = self.utf16
+        let from = range.lowerBound.samePosition(in: utf16view) ?? self.startIndex
+        let to = range.upperBound.samePosition(in: utf16view) ?? self.endIndex
+        return NSMakeRange(utf16view.distance(from: utf16view.startIndex, to: from),
+                           utf16view.distance(from: from, to: to))
+    }
+    
+    func range(from nsRange: NSRange) -> Range<String.Index>? {
+        guard
+            let from16 = utf16.index(utf16.startIndex, offsetBy: nsRange.location, limitedBy: utf16.endIndex),
+            let to16 = utf16.index(from16, offsetBy: nsRange.length, limitedBy: utf16.endIndex),
+            let from = String.Index(from16, within: self),
+            let to = String.Index(to16, within: self)
+            else { return nil }
+        return from ..< to
     }
 }
