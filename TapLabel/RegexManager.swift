@@ -80,9 +80,10 @@ public class RegexManager {
     ///   - regularType: 检查类型
     ///   - string: 需要被匹配的字符串
     ///   - filterPredicate: 过滤条件
+    ///   - filterList: 过滤列表
     /// - Returns: [MatchResultType]
     /// - Throws: 抛出异常
-    public static func regexMatches(regularType: RegularType, string: String?, filterPredicate: ((String) throws -> Bool)? = nil) rethrows -> [MatchResultType] {
+    public static func regexMatches(regularType: RegularType, string: String?, filterPredicate: ((String) throws -> Bool)? = nil, filterList: [String] = []) rethrows -> [MatchResultType] {
         guard let internalString = string, let regex = regexWithRegularType(regularType) else {
             return []
         }
@@ -92,7 +93,12 @@ public class RegexManager {
         for result in matches {
             let nsRange = result.range
             let checkString = internalString.subString(with: nsRange)
+            // 过滤条件
             if try filterPredicate?(checkString) == true {
+                continue
+            }
+            // 过滤名单
+            if filterList.contains(checkString) {
                 continue
             }
             let resultType = MatchResultType(regularType: regularType, rangeString: checkString, nsRange: nsRange, checkingResult: result)
@@ -117,12 +123,13 @@ public class RegexManager {
     ///   - regularType: 检查类型集合
     ///   - string: 需要被匹配的字符串
     ///   - filterPredicate: 过滤条件
+    ///   - filterList: 过滤列表
     /// - Returns: [MatchResultType]
     /// - Throws: 抛出异常
-    public static func regexMatches(regularTypes: [RegularType], string: String?, filterPredicate: ((String) throws -> Bool)? = nil) rethrows -> [MatchResultType] {
+    public static func regexMatches(regularTypes: [RegularType], string: String?, filterPredicate: ((String) throws -> Bool)? = nil, filterList: [String] = []) rethrows -> [MatchResultType] {
         var allMatches = [MatchResultType]()
         for regularType in regularTypes {
-            let matches = try regexMatches(regularType: regularType, string: string, filterPredicate: filterPredicate)
+            let matches = try regexMatches(regularType: regularType, string: string, filterPredicate: filterPredicate, filterList: filterList)
             allMatches = allMatches + matches
         }
         return allMatches
@@ -172,10 +179,11 @@ public class RegexManager {
     ///   - regularTypes: 检查类型集合
     ///   - string: 需要被匹配的字符串
     ///   - filterPredicate: 过滤条件
+    ///   - filterList: 过滤列表
     /// - Returns: 顺序排列结果集
     /// - Throws: 抛出异常
-    public static func widgets(regularTypes: [RegularType], string: String?, filterPredicate: ((String) throws -> Bool)? = nil) rethrows -> [MatchResultType] {
-        let allMatches = try regexMatches(regularTypes: regularTypes, string: string, filterPredicate: filterPredicate)
+    public static func widgets(regularTypes: [RegularType], string: String?, filterPredicate: ((String) throws -> Bool)? = nil, filterList: [String] = []) rethrows -> [MatchResultType] {
+        let allMatches = try regexMatches(regularTypes: regularTypes, string: string, filterPredicate: filterPredicate, filterList: filterList)
         let notMatches = regexNotMatches(matches: allMatches, string: string)
         return widgets(matches: allMatches, notMatches: notMatches)
     }
