@@ -26,9 +26,9 @@ extension ViewController {
     func tapLabelBegin() {
         
         /// 匹配手机号 并且过滤掉13437156081这个号码
-        let phoneResults = RegexManager.regexMatches(regularType: .phoneNumber(.system, .phoneNumber), string: string) { matche in matche == "13437156081" }
+        let phoneResults = RegexManager.regexMatches(regularType: .phoneNumber(.system, .phoneNumber), string: string) { matche in matche == "18837156081" }
         /// 匹配网址
-        let urlResults = RegexManager.regexMatches(regularType: .url(.system, .url), string: string)
+        let urlResults = RegexManager.regexMatches(regularType: .url(.system, .url), string: string, filterList: ["lostsakura.com"])
         /// 匹配@某人
         let atResults = RegexManager.regexMatches(regularType: .mention(.system, .mention), string: string)
         /// 匹配话题
@@ -47,12 +47,16 @@ extension ViewController {
             print(widget, widget.info.rangeString, widget.info.nsRange)
         }
         
+        let attributedString = widgets.addNotMatchAttributes(.notMatch)
+        
+        /*
         /// 一口气进行组件化并打印
         let newWidget = RegexManager.widgets(regularTypes: [.phoneNumber(.system, .nothing), .url(.system, .nothing), .mention(.system, .nothing), .topic(.system, .nothing), .custom("云鹤", .nothing)], string: string)
         print("一口气进行组件化并打印")
         for widget in newWidget {
             print(widget, widget.info.rangeString, widget.info.nsRange)
         }
+         */
         
         /*
         /// 没有封装的方法
@@ -66,21 +70,20 @@ extension ViewController {
         }
          */
         
-        let attributedString = widgets.addNotMatchAttributes(.notMatch)
+        
         
         let label = TapLabel(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 600))
         label.numberOfLines = 0
-        //label.text = string
+        label.text = string
         // 这里设置文本还是富文本都是可以的 理论上说是设置文本的
-        label.attributedText = attributedString
+        //label.attributedText = attributedString
         label.notMatchAttributes = .notMatch
         // 设置字体大小没有效果 需要每一个都进行设置 目前还没有找到原因
         //label.font = UIFont.systemFont(ofSize: 25)
         label.regularTypes = [.phoneNumber(.system, .phoneNumber), .url(.system, .url), .mention(.system, .mention), .topic(.system, .topic), .custom("云鹤", .custom)]
         label.lineSpacing = 10
-        label.setTapCallback { (result) in
-            print(result, result.info.rangeString, result.info.nsRange)
-        }
+        // 这个配置函数需要设置在label.text或者label.attributedText赋值之后
+        label.setTapCallback { print($0, $0.info.rangeString, $0.info.nsRange) }.setFilterPredicate { return $0 == "18837156081"}.setFilterList(["lostsakura.com"])
         label.center = view.center
         label.delegate = self
         //label.matchResults = matches

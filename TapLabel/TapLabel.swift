@@ -84,7 +84,14 @@ public class TapLabel: UILabel {
     private var tapCallback: ((MatchResultType) -> Void)?
     
     /// 过滤规则
-    private var filterPredicate: ((String) -> Bool)?
+    private var filterPredicate: ((String) -> Bool)? {
+        didSet { updateTextStorage() }
+    }
+    
+    /// 过滤白名单
+    private var filterList = [String]() {
+        didSet { updateTextStorage() }
+    }
     
     /// 高度修正
     private var heightCorrection: CGFloat = 0
@@ -157,8 +164,8 @@ extension TapLabel {
             clearActiveElements()
         }
         
-        let all = RegexManager.widgets(regularTypes: regularTypes, string: self.text)
-        matchResults = RegexManager.regexMatches(regularTypes: regularTypes, string: self.text)
+        let all = RegexManager.widgets(regularTypes: regularTypes, string: self.text, filterList: filterList, filterPredicate: filterPredicate)
+        matchResults = RegexManager.regexMatches(regularTypes: regularTypes, string: self.text, filterList: filterList, filterPredicate: filterPredicate)
         var mutAttrString = notMatchAttributes == nil ? all.attributedString : all.addNotMatchAttributes(notMatchAttributes!)
         mutAttrString = addLineBreak(mutAttrString)
         textStorage.setAttributedString(mutAttrString)
@@ -278,6 +285,16 @@ extension TapLabel {
     @discardableResult
     public func setFilterPredicate(_ filterPredicate: ((String) -> Bool)?) -> Self {
         self.filterPredicate = filterPredicate
+        return self
+    }
+    
+    /// 设置过滤白名单
+    ///
+    /// - Parameter filterPredicate: 过滤规则
+    /// - Returns: 对象自己
+    @discardableResult
+    public func setFilterList(_ filterList: [String]) -> Self {
+        self.filterList = filterList
         return self
     }
     

@@ -90,31 +90,38 @@ public class RegexManager {
         }
         
         let matches = regex.matches(in: internalString)
-        var resultTypes = [MatchResultType]()
-        for result in matches {
-            let nsRange = result.range
-            let checkString = internalString.subString(with: nsRange)
-            // 过滤条件
-            if try filterPredicate?(checkString) == true {
-                continue
-            }
-            // 过滤名单
-            if filterList.contains(checkString) {
-                continue
-            }
-            let resultType = MatchResultType(regularType: regularType, rangeString: checkString, nsRange: nsRange, checkingResult: result)
-            resultTypes.append(resultType)
-        }
+//        var resultTypes = [MatchResultType]()
+//        for result in matches {
+//            let nsRange = result.range
+//            let checkString = internalString.subString(with: nsRange)
+//            // 过滤条件
+//            if try filterPredicate?(checkString) == true {
+//                continue
+//            }
+//            // 过滤名单
+//            if filterList.contains(checkString) {
+//                continue
+//            }
+//            let resultType = MatchResultType(regularType: regularType, rangeString: checkString, nsRange: nsRange, checkingResult: result)
+//            resultTypes.append(resultType)
+//        }
         
-        /*
-        // 由于添加了一个过滤规则,所以这里不能使用map函数了 map函数中无法使用break和continue等函数
-        let resultTypes = matches.map { (result) -> MatchResultType in
+        func getMatchResultType(result: NSTextCheckingResult) -> MatchResultType {
             let nsRange = result.range
             let checkString = internalString.subString(with: nsRange)
             let resultType = MatchResultType(regularType: regularType, rangeString: checkString, nsRange: nsRange, checkingResult: result)
             return resultType
         }
-        */
+        /*
+         由于添加了一个过滤规则,所以这里不能单纯使用map函数了 map函数中无法使用break和continue等函数
+         考虑使用filter函数进行过滤
+         getMatchResultType在下面map中的意思是 (NSTextCheckingResult) -> MatchResultType 这样一个闭包
+         */
+        
+        /// 高阶函数使用
+        let resultTypes = matches.map(getMatchResultType).filter { return (try? filterPredicate?($0.rangeString)) != true }.filter { return !filterList.contains($0.rangeString)
+        }
+
         return resultTypes
     }
     
