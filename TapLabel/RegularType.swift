@@ -117,8 +117,7 @@ extension RegularType {
     /// 话题的正则表达字符串
     static let topicPattern = "(?:^|\\s|$)#.*#[\\p{L}0-9_]*"
     
-    /// @某人的正则表达字符串
-    // 你好呀 @DY *最后两边都各有一个空格*
+    /// @某人的正则表达字符串 你好呀 @DY *最后两边都各有一个空格*
     static let mentionPattern = "(?:^|\\s|$|[.])@[\\p{L}0-9_]*"
 }
 

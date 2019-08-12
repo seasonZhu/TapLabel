@@ -18,13 +18,13 @@ public class RegexManager {
     public static var replace = "Ω" {
         didSet {
             if oldValue != replace {
-                separator = Character.init(replace)
+                separator = Character(replace)
             }
         }
     }
     
     /// 分割符 随着替换符同步更换
-    static var separator = Character.init("Ω")
+    static var separator = Character("Ω")
     
     /// 空字符串
     public static var spaceCharacterSet: CharacterSet = {
@@ -106,10 +106,16 @@ public class RegexManager {
 //            resultTypes.append(resultType)
 //        }
         
-        func getMatchResultType(result: NSTextCheckingResult) -> MatchResultType {
+        func getMatchResultType(result: NSTextCheckingResult) -> MatchResultType? {
             let nsRange = result.range
             let checkString = internalString.subString(with: nsRange)
             let resultType = MatchResultType(regularType: regularType, rangeString: checkString, nsRange: nsRange, checkingResult: result)
+            if let filterPredicate = filterPredicate, let filterResult = try? filterPredicate(resultType.rangeString), filterResult  {
+                return nil
+            }
+            if filterList.contains(resultType.rangeString) {
+                return nil
+            }
             return resultType
         }
         /*
@@ -119,9 +125,11 @@ public class RegexManager {
          */
         
         /// 高阶函数使用
+        /* 将过滤条件意志到 getMatchResultType函数中
         let resultTypes = matches.map(getMatchResultType).filter { return (try? filterPredicate?($0.rangeString)) != true }.filter { return !filterList.contains($0.rangeString)
         }
-
+        */
+        let resultTypes = matches.compactMap(getMatchResultType)
         return resultTypes
     }
     
