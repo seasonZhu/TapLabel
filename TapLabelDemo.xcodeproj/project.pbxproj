@@ -23,6 +23,7 @@
 		6176AE00229FA9C20061DFAE /* String+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6176ADFF229FA9C20061DFAE /* String+Extension.swift */; };
 		6176AE02229FAAC50061DFAE /* RegexManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6176AE01229FAAC50061DFAE /* RegexManager.swift */; };
 		6176AE04229FC8100061DFAE /* TapLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6176AE03229FC8100061DFAE /* TapLabel.swift */; };
+		619DEC8724923611002AA7CF /* MatchInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 619DEC8624923611002AA7CF /* MatchInfo.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +69,7 @@
 		6176ADFF229FA9C20061DFAE /* String+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Extension.swift"; sourceTree = "<group>"; };
 		6176AE01229FAAC50061DFAE /* RegexManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegexManager.swift; sourceTree = "<group>"; };
 		6176AE03229FC8100061DFAE /* TapLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapLabel.swift; sourceTree = "<group>"; };
+		619DEC8624923611002AA7CF /* MatchInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchInfo.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -127,6 +129,7 @@
 				6176ADEC229F6C660061DFAE /* TapLabel.h */,
 				6176ADED229F6C660061DFAE /* Info.plist */,
 				6176ADF9229F890F0061DFAE /* RegularType.swift */,
+				619DEC8624923611002AA7CF /* MatchInfo.swift */,
 				6176ADFB229FA86B0061DFAE /* MatchResultType.swift */,
 				6176AE01229FAAC50061DFAE /* RegexManager.swift */,
 				6176AE03229FC8100061DFAE /* TapLabel.swift */,
@@ -264,6 +267,7 @@
 				6176AE02229FAAC50061DFAE /* RegexManager.swift in Sources */,
 				6176AE00229FA9C20061DFAE /* String+Extension.swift in Sources */,
 				6176AE04229FC8100061DFAE /* TapLabel.swift in Sources */,
+				619DEC8724923611002AA7CF /* MatchInfo.swift in Sources */,
 				6176ADFC229FA86B0061DFAE /* MatchResultType.swift in Sources */,
 				6176ADFE229FA99C0061DFAE /* NSRegularExpression+Extension.swift in Sources */,
 				6176ADFA229F890F0061DFAE /* RegularType.swift in Sources */,

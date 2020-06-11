@@ -8,11 +8,6 @@
 
 import Foundation
 
-
-/// 匹配结果和非匹配的结果 range所在的字符串 NSRange区间 后面如果需要将String转为富文本 富文本的特性 NSTextCheckingResult
-public typealias MatchInfo = (rangeString: String, nsRange: NSRange, attributes: Attributes, checkingResult: NSTextCheckingResult?)
-public typealias NotMatchInfo = MatchInfo
-
 /// 匹配结果
 ///
 /// - topic: 话题
@@ -38,21 +33,22 @@ public enum MatchResultType {
     ///   - checkingResult: NSTextCheckingResult
     public init(regularType: RegularType? = nil, rangeString: String, nsRange: NSRange, attributes: Attributes = .nothing,  checkingResult: NSTextCheckingResult?) {
         guard let type = regularType else {
-            self = .notMatch((rangeString, nsRange, attributes, checkingResult))
+            self = .notMatch(MatchInfo(rangeString: rangeString, nsRange: nsRange, attributes: attributes, checkingResult: checkingResult))
             return
         }
         
+        let matchInfo = MatchInfo(rangeString: rangeString, nsRange: nsRange, attributes: type.attributes, checkingResult: checkingResult)
         switch type {
         case .topic:
-            self = .topic((rangeString, nsRange, type.attributes, checkingResult))
+            self = .topic(matchInfo)
         case .mention:
-            self = .mention((rangeString, nsRange, type.attributes, checkingResult))
+            self = .mention(matchInfo)
         case .url:
-            self = .url((rangeString, nsRange, type.attributes, checkingResult))
+            self = .url(matchInfo)
         case .phoneNumber:
-            self = .phoneNumber((rangeString, nsRange, type.attributes, checkingResult))
+            self = .phoneNumber(matchInfo)
         case .custom:
-            self = .custom((rangeString, nsRange, type.attributes, checkingResult))
+            self = .custom(matchInfo)
         }
     }
 }
@@ -117,6 +113,7 @@ extension MatchResultType {
     }
 }
 
+/// 仅做打印使用
 extension MatchResultType: CustomStringConvertible {
     public var description: String {
         let description: String
@@ -148,10 +145,8 @@ extension Array where Element == MatchResultType {
     
     /// MatchResultType数组进行字符串化
     public var attributedString: NSAttributedString {
-        let strings = self.map { $0.attributedString }
-        let attributedString = strings.reduce(NSAttributedString()) { (initAttributedString, string) -> NSAttributedString in
-            return initAttributedString + string
-        }
+        let strings = map { $0.attributedString }
+        let attributedString = strings.reduce(NSAttributedString()) { $0 + $1 }
         return attributedString
     }
     
@@ -160,7 +155,7 @@ extension Array where Element == MatchResultType {
     /// - Parameter attributes: 富文本特性
     /// - Returns: 富文本
     public func addNotMatchAttributes(_ attributes: Attributes) -> NSAttributedString {
-        let strings = self.map { (result) -> NSAttributedString in
+        let strings = map { (result) -> NSAttributedString in
             if case .notMatch = result {
                 return NSAttributedString(string: result.rangeString, attributes: attributes)
             }else {
@@ -168,9 +163,7 @@ extension Array where Element == MatchResultType {
             }
         }
         
-        let attributedString = strings.reduce(NSAttributedString()) { (initAttributedString, string) -> NSAttributedString in
-            return initAttributedString + string
-        }
+        let attributedString = strings.reduce(NSAttributedString()) { $0 + $1 }
         return attributedString
     }
 }

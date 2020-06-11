@@ -228,7 +228,7 @@ extension TapLabel {
             avoidSuperCall = true
         case .cancelled:
             selectedMatchResult = nil
-        case .stationary:
+        case .stationary, .regionEntered, .regionMoved, .regionExited:
             break
         @unknown default:
             break
