@@ -9,7 +9,7 @@
 import Foundation
 
 /// 字符串中需要检查的类型
-///
+/// PatternType:是正则字符串的样式, Attributes:是前面的正则匹配后通过该富文本特性进行渲染
 /// - topic: 话题 #话题#
 /// - mention: @某人
 /// - url: 网址 其实如果需要对网址进行最大长度的限制 其实思路也很简单 就是优先正则网址 然后找到网址,保存原有的url然后切割,对整体字符串进行替换,然后重新进行整体正则,只是我的写的时候整体结果是字符串进行零件化,所以不太适合这样了
@@ -57,16 +57,14 @@ extension RegularType {
             case .custom(let pattern):
                 return pattern
             case .system:
-                // UInt64 32
-                return  String(NSTextCheckingResult.CheckingType.link.rawValue)
+                return  String(NSTextCheckingResult.CheckingType.link.rawValue) // UInt64 32
             }
         case .phoneNumber(let subType, _):
             switch subType {
             case .custom(let pattern):
                 return pattern
             case .system:
-                // UInt64 2048
-                return  String(NSTextCheckingResult.CheckingType.phoneNumber.rawValue)
+                return  String(NSTextCheckingResult.CheckingType.phoneNumber.rawValue) // UInt64 2048
             }
         case .custom(let pattern, _):
             return pattern
@@ -92,6 +90,7 @@ extension RegularType {
     }
 }
 
+/// 仅做打印使用
 extension RegularType: CustomStringConvertible {
     public var description: String {
         let description: String
@@ -111,7 +110,7 @@ extension RegularType: CustomStringConvertible {
     }
 }
 
-// MARK: - 话题和@某人是我写的默认
+// MARK: - 话题和@某人是我自己写的.system
 extension RegularType {
     
     /// 话题的正则表达字符串
