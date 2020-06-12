@@ -90,23 +90,6 @@ public class RegexManager {
         }
         
         let matches = regex.matches(in: internalString)
-        /*
-        var resultTypes = [MatchResultType]()
-        for result in matches {
-            let nsRange = result.range
-            let checkString = internalString.subString(with: nsRange)
-            // 过滤条件
-            if try filterPredicate?(checkString) == true {
-                continue
-            }
-            // 过滤名单
-            if filterList.contains(checkString) {
-                continue
-            }
-            let resultType = MatchResultType(regularType: regularType, rangeString: checkString, nsRange: nsRange, checkingResult: result)
-            resultTypes.append(resultType)
-        }
-        */
         
         /// 函数用闭包代替了
         let matchResultType: (NSTextCheckingResult) -> MatchResultType? = { result in
@@ -122,12 +105,6 @@ public class RegexManager {
             return resultType
         }
         
-        /// 高阶函数使用
-        /*
-         map..filter..通过compactMap更加精简
-        let resultTypes = matches.map(getMatchResultType).filter { return (try? filterPredicate?($0.rangeString)) != true }.filter { return !filterList.contains($0.rangeString)
-        }
-        */
         let resultTypes = matches.compactMap(matchResultType)
         return resultTypes
     }
@@ -143,6 +120,7 @@ public class RegexManager {
     /// - Throws: 抛出异常
     public static func regexMatches(regularTypes: [RegularType], string: String?, filterList: [String] = [], filterPredicate: ((String) throws -> Bool)? = nil) rethrows -> [MatchResultType] {
         var allMatches = [MatchResultType]()
+        /// 这个地方应该还可以继续简化,但是我的高阶函数中有throws与rethrows,反而不知道如何优化了
         for regularType in regularTypes {
             let matches = try regexMatches(regularType: regularType, string: string, filterList: filterList, filterPredicate: filterPredicate)
             allMatches = allMatches + matches
@@ -177,8 +155,7 @@ public class RegexManager {
             let stringInfo = match.info
             changeString = changeString.replacingOccurrences(of: stringInfo.rangeString, with: replace)
         }
-        
-        let notMatchStrings = changeString.split(separator: separator).map { return String($0) }
+        let notMatchStrings = changeString.split(separator: separator).map { String($0) }
         let others = notMatchStrings.map { (notMatchString) -> MatchResultType in
             let range = noChangeString.range(of: notMatchString)!
             let nsRange = noChangeString.nsRange(from: range)
